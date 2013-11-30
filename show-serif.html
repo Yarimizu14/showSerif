@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <!-- origin of words -->
+  <div id="origin" style="display:none">
+    <h1>
+      ああああ
+      <p>
+        いいい
+        <span>
+          ううう
+          <span>えええ</span>
+          <span>おおお</span>
+        </span>
+        かかか
+      </p>
+      ききき
+    </h1>
+  </div>
+
+  <!-- show words here -->
+  <div id="target">
+  </div>
+
+  <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script>
+    function parseDom(text) {
+      var $text = $(text); //textはtextNode,domNode
+      var contents = ($text && $text.contents) ? $text.contents() : $text;
+
+      if (contents && contents.length >= 1) {
+        return $.map(contents.get(), function(val) {
+            return parseDom(val);
+        });
+      } else {
+        return text;
+      }
+    };
+
+    $(function() {
+      console.log(parseDom($("#origin")));
+    });
+  </script>
+</body>
+</html>
