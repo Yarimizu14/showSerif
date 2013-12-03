@@ -35,22 +35,27 @@
         var text = $elem.data("text");
         textIndex = textIndex || 0;
         var parent = $elem.data("parent");
+        var nextFlg = false;
+
+        if (!text) { 
+          parent.append($elem);
+          nextFlg = true;
+        } else if (textIndex < text.length) {
+          parent.append(text.substring(textIndex, textIndex+1));
+          textIndex++
+        } else {
+          clearTimeout(timerId);
+          timerId = null;
+          nextFlg = true;
+        }
+        if (nextFlg) {
+          var next = nodeStack.shift();
+          if (next) showNode(next);
+          return;
+        }
 
         timerId = setTimeout(function() {
-          if (!text) { 
-            parent.append($elem);
-            var next = nodeStack.shift();
-            if (next) showNode(next);
-          } else if (textIndex < text.length) {
-            parent.append(text.substring(textIndex, textIndex+1));
-            textIndex++
-            showNode($elem, textIndex);
-          } else {
-            clearTimeout(timerId);
-            timerId = null;
-            var next = nodeStack.shift();
-            if (next) showNode(next);
-          }
+          showNode($elem, textIndex);
         }, 300);
       }
 
