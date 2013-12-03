@@ -8,7 +8,6 @@
   <!-- origin of words -->
   <div id="origin" style="display:none">
     <h1>
-      ああああ              
       <p>
         いいい
         <span>
@@ -46,10 +45,7 @@
             if (next) showNode(next);
           } else {
             textIndex++
-            //console.log("newTextNode", newTextElem.html());
-            //$elem.repalceWith();
             $elem.text(text.substring(0, textIndex));
-            //$elem.text(text.substring(0, textIndex));
             showNode($elem, textIndex);
           }
         }, 300);
@@ -66,24 +62,39 @@
 
         if (contents && contents.length >= 1) {
           var $tag = $($("<div>").append($elem.clone().html("")).html());  //タグのみを取得
-          parent.append($tag);
+          $tag.data("parent", parent); //親タグの情報を追加
           textQueue.push($tag);
           return $.map(contents.get(), function(val) {
               return parseDom(val, $tag);
           });
         } else {
-          var newTextElem = $("<div>").append($elem.clone());
-          var text = $(elem).text().replace(/\s/g, "") ;
-          newTextElem.data("text", text);
-          parent.append($elem)
-          textQueue.push($elem);
-          if (!timerId) {
-            showNode(textQueue.shift());
-          };
+          var text = $elem.text().replace(/\s/g, "") ;
+          if (text) {
+              var textContainer = $("<div>"); //textNodeを運ぶ仮のDivタグを作成(*textNodeのjQueryオブジェクトではdataメソッドを使用出来ない)
+              textContainer.data("text", text);
+              textContainer.data("parent", parent);
+              textQueue.push(textContainer);
+              if (!timerId) {
+                //showNode(textQueue.shift());
+              };
+          }
           return elem;
         }
       }
-      return parseDom(origin, $(target));
+      var tmp = parseDom(origin, $(target))
+      for (var j=0, len=textQueue.length; j<len; j++) {
+          var p = textQueue[j].data("parent");
+          var t = textQueue[j].data("text");
+          console.log($("<div>").append(textQueue[j]).html());
+          if (p && p.append) {
+              if (t || t === "") {
+                p.append(t);
+              } else {
+                p.append(textQueue[j]);
+              }
+          }
+      }
+      return tmp;
     }
 
     $(function() {
