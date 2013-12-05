@@ -18,6 +18,16 @@
         かかか
       </p>
       ききき
+      <p>
+        いいい
+        <span>
+          ううう
+          <span style="color:red">えええ</span>
+          <span style="color:blue">おおお</span>
+        </span>
+        かかか
+      </p>
+      ききき
     </h1>
   </div>
 
@@ -27,73 +37,157 @@
 
   <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script>
-    function showSerif(origin, target) {
-      var timerId = null;
-      var nodeStack = [];
+function serifController() {
+    this.initialize.apply(this, arguments);
+}
+serifController.prototype.initialize = function() {
+    this.timerId = null;
+    this.nodeStack = [];
+}
+serifController.prototype.showSerif = function(origin, target, callback) {
+    this.initialize();
+    this.parseDom(origin, $(target));
+    return this.showNode(this.nodeStack.shift()); //returns timerId
+}
+serifController.prototype.showNode = function($elem, textIndex) {
+    var text = $elem.data("text");
+    textIndex = textIndex || 0;
+    var parent = $elem.data("parent");
+    var nextFlg = false;
 
-      var showNode = function($elem, textIndex) {
+    if (!text) {
+        parent.append($elem);
+        nextFlg = true;
+    } else if (textIndex < text.length) {
+        parent.append(text.substring(textIndex, textIndex+1));
+        textIndex++
+    } else {
+        clearTimeout(this.timerId);
+        this.timerId = null;
+        nextFlg = true;
+    }
+    if (nextFlg) {
+        var next = this.nodeStack.shift();
+        if (next) {
+            this.showNode(next);
+        } else {
+            if (typeof callback === "function") callback();
+        }
+        return;
+    }
+
+    var self = this;
+    this.timerId = setTimeout(function() {
+        console.log('timerId, ', self.timerId);
+        self.showNode($elem, textIndex);
+    }, 300);
+}
+/*
+   parseDom
+   @params {HTMLCollection} elem
+   @params {jQuery Obj}     parent
+*/
+serifController.prototype.parseDom = function(elem, parent) {
+    var $elem = $(elem);
+    var contents = ($elem && $elem.contents) ? $elem.contents() : $elem; //returns jQuery Object
+    var self = this;
+
+    if (contents && contents.length >= 1) {
+        var $tag = $($("<div>").append($elem.clone().html("")).html());  //タグのみを取得
+        $tag.data("parent", parent); //親タグの情報を追加
+        self.nodeStack.push($tag);
+        return $.map(contents.get(), function(val) {
+            return self.parseDom(val, $tag);
+        });
+    } else {
+        var text = $elem.text().replace(/\s/g, "") ;
+        if (text) {
+            var textContainer = $("<div>"); //textNodeを運ぶ仮のDivタグを作成(*textNodeのjQueryオブジェクトではdataメソッドを使用出来ない)
+            textContainer.data("text", text);
+            textContainer.data("parent", parent);
+            self.nodeStack.push(textContainer);
+        }
+        return elem;
+    }
+}
+serifController.prototype.stopShowing = function() {
+    if (this.timerId)
+        clearTimeout(this.timerId);
+    delete this.nodeStack;
+}
+
+/*
+function showSerif(origin, target, callback) {
+    var timerId = null;
+    var nodeStack = [];
+
+    var showNode = function($elem, textIndex) {
         var text = $elem.data("text");
         textIndex = textIndex || 0;
         var parent = $elem.data("parent");
         var nextFlg = false;
 
-        if (!text) { 
-          parent.append($elem);
-          nextFlg = true;
+        if (!text) {
+            parent.append($elem);
+            nextFlg = true;
         } else if (textIndex < text.length) {
-          parent.append(text.substring(textIndex, textIndex+1));
-          textIndex++
+            parent.append(text.substring(textIndex, textIndex+1));
+            textIndex++
         } else {
-          clearTimeout(timerId);
-          timerId = null;
-          nextFlg = true;
+            clearTimeout(timerId);
+            timerId = null;
+            nextFlg = true;
         }
         if (nextFlg) {
-          var next = nodeStack.shift();
-          if (next) showNode(next);
-          return;
+            var next = nodeStack.shift();
+            if (next) {
+                showNode(next);
+            } else {
+            	if (typeof callback === "function") callback();
+            }
+            return;
         }
 
         timerId = setTimeout(function() {
-          showNode($elem, textIndex);
-        }, 300);
-      }
+            showNode($elem, textIndex);
+        }, 100);
+        return timerId;
+    }
 
-      /*
-         parseDom
-         @params {HTMLCollection} elem
-         @params {jQuery Obj}     parent
-       */
-      var parseDom = function(elem, parent) {
+    var parseDom = function(elem, parent) {
         var $elem = $(elem);
         var contents = ($elem && $elem.contents) ? $elem.contents() : $elem; //returns jQuery Object
 
         if (contents && contents.length >= 1) {
-          var $tag = $($("<div>").append($elem.clone().html("")).html());  //タグのみを取得
-          $tag.data("parent", parent); //親タグの情報を追加
-          nodeStack.push($tag);
-          return $.map(contents.get(), function(val) {
-              return parseDom(val, $tag);
-          });
+            var $tag = $($("<div>").append($elem.clone().html("")).html());  //タグのみを取得
+            $tag.data("parent", parent); //親タグの情報を追加
+            nodeStack.push($tag);
+            return $.map(contents.get(), function(val) {
+                return parseDom(val, $tag);
+            });
         } else {
-          var text = $elem.text().replace(/\s/g, "") ;
-          if (text) {
-              var textContainer = $("<div>"); //textNodeを運ぶ仮のDivタグを作成(*textNodeのjQueryオブジェクトではdataメソッドを使用出来ない)
-              textContainer.data("text", text);
-              textContainer.data("parent", parent);
-              nodeStack.push(textContainer);
-              if (!timerId) {
-                showNode(nodeStack.shift());
-              };
-          }
-          return elem;
+            var text = $elem.text().replace(/\s/g, "") ;
+            if (text) {
+                var textContainer = $("<div>"); //textNodeを運ぶ仮のDivタグを作成(*textNodeのjQueryオブジェクトではdataメソッドを使用出来ない)
+                textContainer.data("text", text);
+                textContainer.data("parent", parent);
+                nodeStack.push(textContainer);
+            }
+            return elem;
         }
-      }
-      return parseDom(origin, $(target))
     }
+    parseDom(origin, $(target));
+    return showNode(nodeStack.shift()); //returns timerId
+}
+*/
 
     $(function() {
-      console.log(showSerif($($("#origin").html()), $("#target")));
+        var h = new serifController()
+        console.log(h.showSerif($($("#origin").html()), $("#target")));
+        setTimeout(function() {
+            h.stopShowing();
+        }, 1500);
+        //console.log(showSerif($($("#origin").html()), $("#target")));
     });
   </script>
 </body>
