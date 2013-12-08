@@ -13,8 +13,8 @@
         いいい
         <span>
           ううう
-          <span>えええ</span>
-          <span>おおお</span>
+          <span style="color:red">えええ</span>
+          <span style="color:blue">おおお</span>
         </span>
         かかか
       </p>
@@ -28,11 +28,12 @@
 
   <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
   <script src="./serifController.js"></script>
-
   <script>
     $(function() {
       var t = new serifController();
-      console.log(t.showSerif($($("#origin").html()), $("#target")));
+      console.log(t.showSerif($($("#origin").html()), $("#target"), function() {
+        console.log("finished");
+      }));
     });
   </script>
 </body>
