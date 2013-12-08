@@ -49,18 +49,18 @@ serifController.prototype.next = function() {
 }
 
 serifController.prototype.show = (function() {
-    var $text, parent;
+    var $text, $parent;
 
     return function($elem) {
-      parent = $elem.data("parent");
-      $text = $($elem.data("text"));      //テキストノードを取得
+      $parent = $elem.data("parent");
+      $text   = $elem.data("text");      //テキストノードを取得
 
-      if (!$text.length) {  //タグの場合:アペンドし次のノードへ進む
-        parent.append($elem);
+      if (!$text) {  //タグの場合:アペンドし次のノードへ進む
+        $parent.append($elem);
         this.next();
       } else {      //テキストノードの場合
-        text = $text.text().replace(/\s/g, "");
-        parent.append($text);
+        $parent.append($text);
+        var text = $text.text().replace(/\s/g, "");
         var self = this;
         this.showText($text, text, function() {
           self.next();
@@ -72,16 +72,17 @@ serifController.prototype.show = (function() {
 /*
    parseDom
    @params {HTMLCollection} elem
-   @params {jQuery Obj}     parent
+   @params {HTMLCollection} parent
 */
 serifController.prototype.parseDom = function(elem, parent) {
-    var $elem = $(elem);
+    var $elem    = $(elem),
+        $parent  = $(parent);
     var contents = ($elem && $elem.contents) ? $elem.contents() : $elem; //returns jQuery Object
     var self = this;
 
     if (contents && contents.length >= 1) {
         var $tag = $($("<div>").append($elem.clone().html("")).html());  //タグのみを取得
-        $tag.data("parent", parent); //親タグの情報を追加
+        $tag.data("parent", $parent); //親タグの情報を追加
         self.nodeStack.push($tag);
         return $.map(contents.get(), function(val) {
             return self.parseDom(val, $tag);
@@ -90,9 +91,8 @@ serifController.prototype.parseDom = function(elem, parent) {
         var text = $elem.text().replace(/\s/g, "") ;
         if (text) {
             var textContainer = $("<div>"); //textNodeを運ぶ仮のDivタグを作成(*textNodeのjQueryオブジェクトではdataメソッドを使用出来ない)
-            //textContainer.data("text", text);
-            textContainer.data("text", elem);
-            textContainer.data("parent", parent);
+            textContainer.data("text", $elem);
+            textContainer.data("parent", $parent);
             self.nodeStack.push(textContainer);
         }
         return elem;
@@ -104,5 +104,4 @@ serifController.prototype.stopShowing = function() {
         clearTimeout(this.timerId);
     delete this.nodeStack;
 }
-
 
