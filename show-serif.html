@@ -8,7 +8,7 @@
   <!-- origin of words -->
   <div id="origin" style="display:none">
     <h1>
-      ああああ              
+      ああああ
       <p>
         いいい
         <span>
@@ -27,63 +27,12 @@
   </div>
 
   <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="./serifController.js"></script>
+
   <script>
-    function showSerif(origin, target) {
-      var focusTag = $(target);
-
-      var timerId = null;
-      var textQueue = [];
-
-      var showNode = function(obj, textIndex) {
-        textIndex = textIndex || 1;
-        var t = obj.data("text");
-
-        timerId = setTimeout(function() { 
-          if (!t) {
-            return null;
-          }
-          if (t.length <= textIndex) {
-            clearTimeout(timerId);
-            timerId = null;
-            next = textQueue.shift();
-            console.log(next.get(0).tagName);
-            if (next) showNode(next);
-          } else {
-            textIndex++
-            //console.log(obj.get(0).tagName);
-            obj.text(t.substring(0, textIndex));
-            showNode(obj, textIndex);
-          }
-        }, 300);
-      }
-
-      var flag = 0;
-      var parseDom = function(node, p) {
-        var $node = $(node); //nodeはtextNodeまたはdomNode
-        var contents = ($node && $node.contents) ? $node.contents() : $node;
-
-        if (contents && contents.length >= 1) {
-          var $tag = $($("<div>").append($node.clone().html("")).html());
-          p.append($tag);
-          return $.map(contents.get(), function(val) {
-              return parseDom(val, $tag);
-          });
-        } else {
-          var text = $(node).text().replace(/\s/g, "") ;
-          p.data("text",text);
-          textQueue.push(p);
-          console.log(p);
-          if (!timerId) {
-            showNode(textQueue[0]);
-          };
-          return node;
-        }
-      }
-      return parseDom(origin, $(target));
-    }
-
     $(function() {
-      console.log(showSerif($($("#origin").html()), $("#target")));
+      var t = new serifController();
+      console.log(t.showSerif($($("#origin").html()), $("#target")));
     });
   </script>
 </body>
